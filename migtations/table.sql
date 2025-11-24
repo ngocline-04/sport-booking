@@ -93,7 +93,16 @@ CREATE TABLE schedule_for_field (
 -- ========================
 CREATE TYPE booking_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE payment_status AS ENUM ('unpaid', 'paid');
-
+-- ========================
+-- Table: roles
+-- ========================
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 -- ========================
 -- Table: users
 -- ========================
@@ -125,16 +134,13 @@ CREATE TABLE booking (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- ========================
--- Table: roles
--- ========================
-CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+--Insert default 
+INSERT INTO field_types (name, description) VALUES
+('IN_HOUSE','Sân trong nhà, sân cơ bản'),
+('OUT_DOOR','Sân ngoài trời, sân tiêu chuẩn, không mái che'),
+('OUT_DOOR_COVERED','Sân ngoài trời, sân tiêu chuẩn, có mái che'),
+('VIP/IN_HOUSE','Sân trong nhà, sân thi đấu'),
+('VIP/OUT_DOOR','Sân ngoài trời, sân thi đấu có mái che');
 
 -- Insert default roles
 INSERT INTO roles (name, description) VALUES
@@ -142,6 +148,27 @@ INSERT INTO roles (name, description) VALUES
 ('ROLE_ADMIN','Quản trị viên'),
 ('ROLE_CREATOR','Người tạo'),
 ('ROLE_APPROVER','Người phê duyệt');
+-- Insert default sport types
+INSERT INTO sport_types (name, description) VALUES
+('Football','Bóng đá'),
+('Tennis','Quần vợt'),
+('Badminton','Cầu lông'),
+('Basketball','Bóng rổ'),
+('Volleyball','Bóng chuyền'),
+('Pickleball','Pickleball');
+
+-- Insert default locations
+INSERT INTO locations (name, description) VALUES
+('Đống Đa','Hà Nội'),
+('Cầu Giấy','Hà Nội'),
+('Thanh Xuân','Hà Nội'),
+('Hai Bà Trưng','Hà Nội'),
+('Tây Hồ','Hà Nội'),
+('Hoàn Kiếm','Hà Nội'),
+('Ba Đình','Hà Nội'),
+('Long Biên','Hà Nội'),
+('Nam Từ Liêm','Hà Nội'),
+('Bắc Từ Liêm','Hà Nội');
 
 -- ========================
 -- Table: approvers

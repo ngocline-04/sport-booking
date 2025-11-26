@@ -51,13 +51,11 @@ exports.getListFields = async (req, res) => {
       success: true,
       data: result.rows,
     });
-
   } catch (error) {
     console.error("getListFields ERROR:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 exports.createField = async (req, res) => {
   const {
@@ -73,8 +71,6 @@ exports.createField = async (req, res) => {
     amount_available,
     status = "available",
   } = req.body;
-
-  console.log("REQ BODY:", req.body);
 
   if (
     !name ||
@@ -178,7 +174,6 @@ exports.updateField = async (req, res) => {
       return res.status(404).json({ message: "Field not found" });
 
     res.json({ success: true, data: result.rows[0] });
-
   } catch (err) {
     console.error("updateField ERROR:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -205,8 +200,11 @@ exports.deleteField = async (req, res) => {
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Field not found" });
 
-    res.json({ success: true, message: "Field deleted (soft)", data: result.rows[0] });
-
+    res.json({
+      success: true,
+      message: "Field deleted (soft)",
+      data: result.rows[0],
+    });
   } catch (err) {
     console.error("deleteField ERROR:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -246,10 +244,186 @@ exports.getFieldById = async (req, res) => {
       return res.status(404).json({ message: "Field not found" });
 
     res.json({ success: true, data: result.rows[0] });
-
   } catch (err) {
     console.error("getFieldById ERROR:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
+exports.listTypesFields = async (req, res) => {
+  try {
+    const fieldTypes = pool.query(`SELECT * FROM field_types ORDER BY id ASC`);
+    if (!fieldTypes)
+      return res.status(404).json({ message: "No field types found" });
+
+    res.json({ success: true, data: (await fieldTypes).rows });
+  } catch (error) {
+    console.error("listTypesFields ERROR:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.createTypeField = async (req, res) => {
+  const { name, description } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: "Missing required field: name" });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO field_types (name, description, created_at, updated_at)
+       VALUES ($1, $2, NOW(), NOW())
+       RETURNING *`,
+      [name, description]
+    );
+
+    res.status(200).json({ message: "SUCCESS", fieldType: result.rows[0] });
+  } catch (error) {
+    console.error("ERROR QUERY:", error);
+    res.status(500).json({ error: "Server error", detail: error.message });
+  }
+};
+
+exports.updateFieldType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    if (!id) return res.status(400).json({ message: "Missing type field id" });
+
+    const query = `
+      UPDATE field_types
+      SET
+        name = COALESCE($1, name),
+        description = COALESCE($2, description),
+        updated_at = NOW()
+      WHERE id = $3
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [name, description, id]);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: "Field type not found" });
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error("updateFieldType ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.deleteFieldType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: "Missing type field id" });
+
+    const query = `
+      DELETE FROM field_types
+      WHERE id = $1
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: "Field type not found" });
+    res.json({
+      success: true,
+      message: "Field type deleted",
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("deleteFieldType ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.listTypesSports = async (req, res) => {
+  try {
+    const sportTypes = pool.query(`SELECT * FROM sport_types ORDER BY id ASC`);
+    if (!sportTypes)
+      return res.status(404).json({ message: "No sport types found" });
+
+    res.json({ success: true, data: (await sportTypes).rows });
+  } catch (error) {
+    console.error("listTypesSports ERROR:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.createTypeSport = async (req, res) => {
+  const { name, description } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: "Missing required field: name" });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO sport_types (name, description, created_at, updated_at)
+        VALUES ($1, $2, NOW(), NOW())
+        RETURNING *`,
+      [name, description]
+    );
+
+    res.status(200).json({ message: "SUCCESS", sportType: result.rows[0] });
+  } catch (error) {
+    console.error("ERROR QUERY:", error);
+    res.status(500).json({ error: "Server error", detail: error.message });
+  }
+};
+
+exports.updateSportType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    if (!id) return res.status(400).json({ message: "Missing type sport id" });
+
+    const query = `
+      UPDATE sport_types
+      SET
+        name = COALESCE($1, name),
+        description = COALESCE($2, description),
+        updated_at = NOW()
+      WHERE id = $3
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [name, description, id]);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: "Sport type not found" });
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error("updateSportType ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.deleteSportType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: "Missing type sport id" });
+
+    const query = `
+      DELETE FROM sport_types
+      WHERE id = $1
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: "Sport type not found" });
+    res.json({
+      success: true,
+      message: "Sport type deleted",
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("deleteSportType ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

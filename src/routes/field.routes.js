@@ -13,11 +13,14 @@ const {
   createTypeSport,
   updateSportType,
   deleteSportType,
+  listAvailableFields
 } = require("../controllers/field.controller");
+// const { listAvailableFields } = require("../controllers/location.controller");
 
 router.post("/create-field", verifyToken, createField);
 router.get("/list_fields", getListFields);
 router.put("/update_field/:id", verifyToken, updateField);
+router.get("/list_available", listAvailableFields);
 
 router.delete("/delete_field/:id", verifyToken, deleteField);
 router.get("/detail_field/:id", getFieldById);

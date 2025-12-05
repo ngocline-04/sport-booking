@@ -1,3 +1,4 @@
+const pool = require("../db/db");
 exports.listLocations = async (req, res) => {
   try {
     const search = req.query.search || ""; // không truyền thì = rỗng

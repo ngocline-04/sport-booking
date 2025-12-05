@@ -70,7 +70,8 @@ CREATE TABLE field_price (
 -- ========================
 CREATE TABLE schedules (
     id SERIAL PRIMARY KEY,
-    time VARCHAR(10) NOT NULL,
+    time_from VARCHAR(10) NOT NULL,
+    time_to VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -84,6 +85,7 @@ CREATE TABLE schedule_for_field (
     id_field INT NOT NULL REFERENCES fields(id) ON DELETE CASCADE,
     id_type INT NOT NULL REFERENCES field_types(id) ON DELETE CASCADE,
     amount_available INT DEFAULT 0 CHECK (amount_available >= 0),
+    status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available','unavailable')),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -128,8 +130,8 @@ CREATE TABLE booking (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_approve INT REFERENCES users(id) ON DELETE SET NULL,
     id_schedule INT REFERENCES schedules(id) ON DELETE SET NULL,
-    status booking_status DEFAULT 'pending',
-    status_payment payment_status DEFAULT 'unpaid',
+    -- status booking_status DEFAULT 'pending',
+    -- status_payment payment_status DEFAULT 'unpaid',
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -170,15 +172,21 @@ INSERT INTO locations (name, description) VALUES
 ('Nam Từ Liêm','Hà Nội'),
 ('Bắc Từ Liêm','Hà Nội');
 
+-- Insert default schedules
+INSERT INTO schedules (timeFrom, timeTo) VALUES
+('7:00:00','9:00:00'),
+('9:00:00', '11:00:00'),
+('11:00:00', '13:00:00'),
+('13:00:00','15:00:00');
 -- ========================
 -- Table: approvers
 -- ========================
-CREATE TABLE approvers (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    approved_by INT REFERENCES users(id) ON DELETE SET NULL,
-    approved_at TIMESTAMP DEFAULT NOW()
-);
+-- CREATE TABLE approvers (
+--     id SERIAL PRIMARY KEY,
+--     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--     approved_by INT REFERENCES users(id) ON DELETE SET NULL,
+--     approved_at TIMESTAMP DEFAULT NOW()
+-- );
 
 -- ========================
 -- Table: bill
@@ -190,7 +198,7 @@ CREATE TABLE bill (
     time TIMESTAMP DEFAULT NOW(),
     user_received INT NOT NULL REFERENCES users(id) ON DELETE SET NULL,
     amount NUMERIC(12,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending','paid','failed')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending','paid','failed','cancelled')),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

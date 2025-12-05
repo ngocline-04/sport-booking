@@ -47,31 +47,44 @@ exports.login = async (req, res) => {
 
     try {
         const userResult = await pool.query(
-            "SELECT * FROM users WHERE email = $1",
+            "SELECT id, username, email, role_id FROM users WHERE email = $1",
             [email]
         );
+
         if (userResult.rows.length === 0) {
             return res.status(401).json({ error: "Email không tồn tại" });
         }
 
         const user = userResult.rows[0];
 
-        // Check password
-        const valid = bcrypt.compareSync(password, user.password);
+        // Lấy password riêng (để tránh trả ra FE)
+        const passCheck = await pool.query(
+            "SELECT password FROM users WHERE email = $1",
+            [email]
+        );
+
+        const valid = bcrypt.compareSync(password, passCheck.rows[0].password);
+
         if (!valid) {
             return res.status(401).json({ error: "Sai mật khẩu" });
         }
 
         // Tạo JWT token
         const token = jwt.sign(
-            { id: user.id, email: user.email },
+            { id: user.id, email: user.email, role_id: user.role_id },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 
-        res.json({ message: "Đăng nhập thành công", token });
+        res.json({
+            message: "Đăng nhập thành công",
+            token,
+            user, // Trả thêm thông tin người dùng
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Lỗi server", detail: err.message });
     }
 };
+
